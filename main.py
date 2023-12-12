@@ -30,6 +30,24 @@ def filtro_categorias(titulo, dados_totais):
         return data_mesma_categoria 
     return None
 
+def plotar_dados(df):
+        author = df["authors"].tolist()[0]
+        year = df["publishedDate"].tolist()[0]
+        nome = df["Title"].tolist()[0]
+        categoria = df["categories"].tolist()[0]
+        description = df["description"].tolist()[0]
+        imagem = df["image"].tolist()[0]
+        if imagem:
+            st.image(imagem)
+        else:
+            st.image("livro_comum.jpg")
+        st.write(f"**Name**: {nome}")
+        st.write(f"**Author:** {author}")
+        st.write(f"**Categories:** {categoria}")
+        st.write(f"**Published date:** {year}")
+        with st.expander(label="Description"):
+            st.write(f"**Description**: {description}")
+
 
 def limpando_titulos(text):
     text = re.sub("[^a-zA-Z0-9\s]", "", text)
@@ -48,28 +66,15 @@ def similaridade(vetor_dataframe, vetor_amostra):
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
 data = loading_data(r"data\preprocessed_data.parquet")
-embendding_matrix = loading_embedding_bert(r'data\vetor_embedding_serializado.pkl')
+embendding_matrix = loading_embedding_bert(r'data\vetor_embedding_bert_large.pkl')
 title_input = limpando_titulos(st.sidebar.text_input(label="Write a Title", value="Dr Seuss American icon"))
 titulo_escolhido = data[data["Title_cleaned"].str.contains(r"^{}".format(title_input), regex=True)]
 
-left_column, right_column = st.columns(2)
+left_column, middle_column, right_column = st.columns(3, gap="large")
 with st.sidebar:
     st.write(f"## What about your book?")
     if title_input and not titulo_escolhido["Title"].empty:
-        author = titulo_escolhido["authors"].tolist()[0]
-        year = titulo_escolhido["publishedDate"].tolist()[0]
-        nome = titulo_escolhido["Title"].tolist()[0]
-        categoria = titulo_escolhido["categories"].tolist()[0]
-        description = titulo_escolhido["description"].tolist()[0]
-        imagem = titulo_escolhido["image"].tolist()[0]
-        if imagem:
-            st.image(imagem)
-        st.write(f"**Name**: {nome}")
-        st.write(f"**Author:** {author}")
-        st.write(f"**Categories:** {categoria}")
-        st.write(f"**Published date:** {year}")
-        with st.expander(label="Description"):
-            st.write(f"**Description**: {description}")
+        plotar_dados(titulo_escolhido)
     else:
         st.write("I do not have this book in my database!")
 
@@ -84,10 +89,44 @@ if not titulo_escolhido["Title"].empty:
     data["similaridade"] = similaridades_df
 
     # Top 5 similares
-    five_top_gender = data.loc[data_mesma_categoria.index].sort_values(by="similaridade", ascending=False).reset_index(drop=True).loc[1:5]
-    five_top = data.sort_values(by="similaridade", ascending=False).reset_index(drop=True).loc[1:5]
-    st.write(five_top_gender)
-    st.write(five_top)
+    five_top_gender = data.loc[data_mesma_categoria.index].sort_values(by="similaridade", ascending=False).reset_index(drop=True).loc[1:]
+    five_top = data.sort_values(by="similaridade", ascending=False).reset_index(drop=True).loc[1:]
+    if len(five_top_gender) > 0:
+        with left_column:
+            primeiro_livro = five_top_gender.loc[[1]]
+            plotar_dados(primeiro_livro)
+        
+        with middle_column:
+            segundo_livro = five_top_gender.loc[[2]]
+            plotar_dados(segundo_livro)
+
+        with right_column:
+            terceiro_livro = five_top_gender.loc[[3]]
+            plotar_dados(terceiro_livro)   
+    else:
+        st.write("## There are no books of the same category!!")
+
+    st.subheader("Books of diferent categories, that could be of your interest.")
+    left_column_2, middle_column_2, right_column_2 = st.columns(3, gap="large")
+    with left_column_2:
+        primeiro_livro_similarity = five_top.loc[[1]]
+        if primeiro_livro["Title"].values[0] == primeiro_livro_similarity["Title"].values[0]:
+            primeiro_livro_similarity = five_top.loc[[4]]
+        plotar_dados(primeiro_livro_similarity)
+
+    with middle_column_2:
+        segundo_livro_similarity = five_top.loc[[2]]
+        if segundo_livro["Title"].values[0] == segundo_livro_similarity["Title"].values[0]:
+            segundo_livro_similarity = five_top.loc[[5]]
+        plotar_dados(segundo_livro_similarity)
+    
+    with right_column_2:
+        terceiro_livro_similarity = five_top.loc[[3]]
+        if terceiro_livro["Title"].values[0] == terceiro_livro_similarity["Title"].values[0]:
+            terceiro_livro_similarity = five_top.loc[[6]]
+        plotar_dados(terceiro_livro_similarity)
+
+    st.write(data.sample(n=30))
 
     
 
