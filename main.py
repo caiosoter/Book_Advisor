@@ -1,5 +1,6 @@
 import streamlit as st
 import re
+import joblib
 import pickle
 import torch
 import pyarrow.parquet as pq
@@ -40,7 +41,7 @@ def plotar_dados(df):
         if imagem:
             st.image(imagem)
         else:
-            st.image("livro_comum.jpg")
+            st.image(st.secrets["link_sem_imagem"])
         st.write(f"**Name**: {nome}")
         st.write(f"**Author:** {author}")
         st.write(f"**Categories:** {categoria}")
@@ -51,11 +52,22 @@ def plotar_dados(df):
 
 def limpando_titulos(text):
     text = re.sub("[^a-zA-Z0-9\s]", "", text)
-    text = re.sub(r":|\(|\)|:|\[|\]|!|\?", "", text)
     text = text.strip(" ")
-    text = re.sub("\s", "", text)
+    text = re.sub("\s+", " ", text)
     text = text.lower()
     return text
+
+def search_engine(title, data_tfi, dados, vectorizer):
+    dados_copiados = dados.copy() 
+    title = title.lower()
+    title = re.sub("\s+", " ", title)
+    title = re.sub("[^a-zA-Z0-9\s]", "", title)
+    title = title.strip(" ")
+    vetor_titulo = vectorizer.transform([title])
+    similarities_title = cosine_similarity(vetor_titulo, data_tfi).flatten()
+    dados_copiados["similarity_title"] = similarities_title
+    resultado = dados_copiados.sort_values(by="similarity_title", ascending=False).head(1)
+    return resultado
 
 
 def similaridade(vetor_dataframe, vetor_amostra):
@@ -68,12 +80,17 @@ st.subheader('I would like to suggest you a new book!!')
 data = loading_data(r"data\preprocessed_data.parquet")
 embendding_matrix = loading_embedding_bert(r'data\vetor_embedding_bert_large.pkl')
 title_input = limpando_titulos(st.sidebar.text_input(label="Write a Title", value="Dr Seuss American icon"))
-titulo_escolhido = data[data["Title_cleaned"].str.contains(r"^{}".format(title_input), regex=True)]
+
+tfid_model = joblib.load(r"models\tfid.joblib")
+vetor_transformado = tfid_model.transform(data["Title_cleaned"])
+titulo_escolhido = search_engine(title_input, vetor_transformado, data, tfid_model)
+
+st.write(titulo_escolhido)
 
 left_column, middle_column, right_column = st.columns(3, gap="large")
 with st.sidebar:
     st.write(f"## What about your book?")
-    if title_input and not titulo_escolhido["Title"].empty:
+    if  not titulo_escolhido["Title"].empty:
         plotar_dados(titulo_escolhido)
     else:
         st.write("I do not have this book in my database!")
@@ -106,7 +123,7 @@ if not titulo_escolhido["Title"].empty:
     else:
         st.write("## There are no books of the same category!!")
 
-    st.subheader("Books of diferent categories, that could be of your interest.")
+    st.subheader("Books of mixed categories, that could be of your interest.")
     left_column_2, middle_column_2, right_column_2 = st.columns(3, gap="large")
     with left_column_2:
         primeiro_livro_similarity = five_top.loc[[1]]
