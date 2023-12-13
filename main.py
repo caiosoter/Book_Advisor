@@ -57,7 +57,7 @@ def limpando_titulos(text):
     text = text.lower()
     return text
 
-def search_engine(title, data_tfi, dados, vectorizer):
+def search_engine(vectorizer, data_tfi, dados, title="Dr Seuss American icon"):
     dados_copiados = dados.copy() 
     title = title.lower()
     title = re.sub("\s+", " ", title)
@@ -66,7 +66,7 @@ def search_engine(title, data_tfi, dados, vectorizer):
     vetor_titulo = vectorizer.transform([title])
     similarities_title = cosine_similarity(vetor_titulo, data_tfi).flatten()
     dados_copiados["similarity_title"] = similarities_title
-    resultado = dados_copiados.sort_values(by="similarity_title", ascending=False).head(1)
+    resultado = dados_copiados.sort_values(by="similarity_title", ascending=False).head(3)
     return resultado
 
 
@@ -83,71 +83,77 @@ title_input = limpando_titulos(st.sidebar.text_input(label="Write a Title", valu
 
 tfid_model = joblib.load(r"models\tfid.joblib")
 vetor_transformado = tfid_model.transform(data["Title_cleaned"])
-titulo_escolhido = search_engine(title_input, vetor_transformado, data, tfid_model)
+titulo_escolhido = search_engine(tfid_model, vetor_transformado, data, title_input)
 
-st.write(titulo_escolhido)
+condicao_nao_existencia = titulo_escolhido.values[0, -1] > 0.7
+if not titulo_escolhido["Title"].empty and condicao_nao_existencia:
+    with st.sidebar:
+            titulo1 = titulo_escolhido.reset_index(drop=True).loc[[0]]
+            titulo2 = titulo_escolhido.reset_index(drop=True).loc[[1]]
+            titulo3 = titulo_escolhido.reset_index(drop=True).loc[[2]]
+            st.subheader('Are any of these your book?')
+            plotar_dados(titulo1)
+            button1 = st.button(label="First option")
+            plotar_dados(titulo2)
+            button2 = st.button(label="Second option")
+            plotar_dados(titulo3)
+            button3 = st.button(label="Third option")
+            if button1:
+                titulo_escolhido = titulo1
+            elif button2:
+                titulo_escolhido = titulo2
+            else:
+                titulo_escolhido = titulo3
+else:
+    with st.sidebar:
+        st.write("### I do not have this book in my database!")
 
 left_column, middle_column, right_column = st.columns(3, gap="large")
-with st.sidebar:
-    st.write(f"## What about your book?")
-    if  not titulo_escolhido["Title"].empty:
-        plotar_dados(titulo_escolhido)
-    else:
-        st.write("I do not have this book in my database!")
-
-
-if not titulo_escolhido["Title"].empty:
+if condicao_nao_existencia and (button1 or button2 or button3):
     index = titulo_escolhido.index[0]
     vetor_embebending_amostra = embendding_matrix.iloc[index][0]
 
     # Filtrar os livros de categorias semelhantes:
     data_mesma_categoria = filtro_categorias(titulo_escolhido, data)
     similaridades_df = similaridade(embendding_matrix, vetor_embebending_amostra)
-    data["similaridade"] = similaridades_df
+    df_com_similares = data.copy()
+    df_com_similares["similaridade"] = similaridades_df
 
-    # Top 5 similares
-    five_top_gender = data.loc[data_mesma_categoria.index].sort_values(by="similaridade", ascending=False).reset_index(drop=True).loc[1:]
-    five_top = data.sort_values(by="similaridade", ascending=False).reset_index(drop=True).loc[1:]
-    if len(five_top_gender) > 0:
+    # Similares
+    top_gender = df_com_similares.loc[data_mesma_categoria.index].sort_values(by="similaridade", ascending=False).reset_index(drop=True).loc[1:]
+    similarity_top = df_com_similares[~df_com_similares["Title"].isin(top_gender.head(4)["Title"].tolist())].sort_values(by="similaridade", ascending=False)
+    similarity_top_diferentes = similarity_top.reset_index(drop=True)
+    
+    if len(top_gender) > 0:
         with left_column:
-            primeiro_livro = five_top_gender.loc[[1]]
+            primeiro_livro = top_gender.loc[[1]]
             plotar_dados(primeiro_livro)
         
         with middle_column:
-            segundo_livro = five_top_gender.loc[[2]]
-            plotar_dados(segundo_livro)
+            if len(top_gender) >= 2:
+                segundo_livro = top_gender.loc[[2]]
+                plotar_dados(segundo_livro)
 
         with right_column:
-            terceiro_livro = five_top_gender.loc[[3]]
-            plotar_dados(terceiro_livro)   
+            if len(top_gender) >= 3:
+                terceiro_livro = top_gender.loc[[3]]
+                plotar_dados(terceiro_livro)   
     else:
         st.write("## There are no books of the same category!!")
 
     st.subheader("Books of mixed categories, that could be of your interest.")
     left_column_2, middle_column_2, right_column_2 = st.columns(3, gap="large")
     with left_column_2:
-        primeiro_livro_similarity = five_top.loc[[1]]
-        if primeiro_livro["Title"].values[0] == primeiro_livro_similarity["Title"].values[0]:
-            primeiro_livro_similarity = five_top.loc[[4]]
+        primeiro_livro_similarity = similarity_top_diferentes.loc[[1]]
         plotar_dados(primeiro_livro_similarity)
 
     with middle_column_2:
-        segundo_livro_similarity = five_top.loc[[2]]
-        if segundo_livro["Title"].values[0] == segundo_livro_similarity["Title"].values[0]:
-            segundo_livro_similarity = five_top.loc[[5]]
+        segundo_livro_similarity = similarity_top_diferentes.loc[[2]]
         plotar_dados(segundo_livro_similarity)
     
     with right_column_2:
-        terceiro_livro_similarity = five_top.loc[[3]]
-        if terceiro_livro["Title"].values[0] == terceiro_livro_similarity["Title"].values[0]:
-            terceiro_livro_similarity = five_top.loc[[6]]
+        terceiro_livro_similarity = similarity_top_diferentes.loc[[3]]
         plotar_dados(terceiro_livro_similarity)
 
-    st.write(data.sample(n=30))
 
-    
-
-
-
-
-
+st.write(data.sample(n=30))
