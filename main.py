@@ -11,7 +11,7 @@ import boto3
 import logging
 from sklearn.metrics.pairwise import cosine_similarity
 
-
+@st.cache_resource
 def get_s3_client():
    s3 = boto3.client('s3', 
          aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
@@ -28,6 +28,7 @@ def load_model_from_s3(bucket, key):
              return joblib.load(fp)
      except Exception as e:
          raise logging.exception(e)
+
     
 @st.cache_data
 def loading_tfdi():
@@ -35,6 +36,21 @@ def loading_tfdi():
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi.npz")["Body"].read()
     dados = ss.load_npz(BytesIO(obj))
     return dados
+
+@st.cache_data
+def loading_books():
+    s3_client = get_s3_client()
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_books2.feather")["Body"].read()
+    dados = pd.read_feather(BytesIO(obj))
+    return dados
+
+@st.cache_data
+def loading_interactions():
+    s3_client = get_s3_client()
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions.feather")["Body"].read()
+    dados = pd.read_feather(BytesIO(obj))
+    return dados
+
     
 def plotar_dados(df):
         author = df["author"].tolist()[0]
@@ -61,46 +77,48 @@ def search_engine(title, books, tf_data, model):
     index = np.argpartition(similarity, -10)[-10:]
     book_copy["similarites"] = similarity
     resuts = book_copy.loc[index].sort_values("similarites", ascending=False)
+    resuts_filtro = resuts[resuts["Title_cleaned"].str.contains(title)]
+    if not resuts_filtro.empty:
+        return resuts_filtro.head(5)
     return resuts.head(5)
 
 
-def recomendacao(escolha, df_books, df_book_id_map, df_interactions):
-    csv_id = df_book_id_map[df_book_id_map["book_id"].isin(escolha)].loc[:, "book_id_csv"].values[0]
-    usuarios = df_interactions[(df_interactions["book_id"] == csv_id)&(df_interactions["rating"] >= 4)]
+def recomendacao(escolha, df_books, df_interactions):
+    csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"].values
+    usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id))&(df_interactions["rating"] >= 4)]
     id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
-    id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(escolha)]
+    id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
     resultado = id_books_usuarios["book_id"].value_counts(ascending=False).to_frame().reset_index()
-    resultado = pd.merge(resultado, df_book_id_map, how="inner", left_on="book_id", right_on="book_id_csv").drop(columns=["book_id_x", "book_id_csv"])
-    resultado = pd.merge(resultado, df_books, how="inner", left_on="book_id_y", right_on="book_id")
-    resultado = resultado[~resultado["book_id"].isin(escolha)]
+    resultado = pd.merge(resultado, df_books, how="inner", left_on="book_id", right_on="book_id_csv")
     resultado["score"] = resultado["count"] * (resultado["count"]/resultado["ratings_count"])
+    resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y":"book_id"})
     resultado = resultado.sort_values(["score" , "count"], ascending=[False, False]).head(6)
     return resultado
 
+st.set_page_config(page_title="Book Advisor", page_icon=":book")
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
-conn = st.connection('s3', type=FilesConnection)
-df_map_id = conn.read("databook/book_id_map.parquet", input_format="parquet")
-df_books = conn.read("databook/goodreads_books.parquet", input_format="parquet")
+df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 
 with st.sidebar:
+    st.subheader("Choose three titles of your choice:")
     input_title = st.text_input(label="Write a title")
-    resultado = search_engine(input_title, df_books, dados_npz, model)
-    existencia1 = resultado["similarites"].max() > 0.5
-
     input_title2 = st.text_input(label="Write a second title")
-    resultado2 = search_engine(input_title2, df_books, dados_npz, model)
-    existencia2 = resultado2["similarites"].max() > 0.5
-
     input_title3 = st.text_input(label="Write a third title")
+
+    resultado = search_engine(input_title, df_books, dados_npz, model)
+    resultado2 = search_engine(input_title2, df_books, dados_npz, model)
     resultado3 = search_engine(input_title3, df_books, dados_npz, model)
+
+    existencia1 = resultado["similarites"].max() > 0.5
+    existencia2 = resultado2["similarites"].max() > 0.5
     existencia3 = resultado3["similarites"].max() > 0.5
 
 
 if (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
-    dados_interactions = conn.read("databook/goodreads_interactions.parquet", input_format="parquet")
+    dados_interactions = loading_interactions()
     st.write("## About your books:")
     left, middle, right = st.columns(3, gap="large")
     with left:
@@ -113,25 +131,25 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
     id_escolhido1 = resultado.iloc[[0]]["book_id"].values[0]
     id_escolhido2 = resultado2.iloc[[0]]["book_id"].values[0]
     id_escolhido3 = resultado3.iloc[[0]]["book_id"].values[0]
-    rec = recomendacao([id_escolhido1, id_escolhido2, id_escolhido3], df_books, df_map_id, dados_interactions)
+    rec = recomendacao([id_escolhido1, id_escolhido2, id_escolhido3], df_books, dados_interactions)
 
     if not rec.empty:
-        st.write("## My recommendations:")
+        st.write("## My recommendations are:")
         left, middle, right = st.columns(3, gap="large")
-        if len(rec) == 1:
-            with middle:
-                plotar_dados(rec.iloc[[0]])
-        elif len(rec) > 2:
-            with left:
-                plotar_dados(rec.iloc[[0]])
-            with middle:
-                plotar_dados(rec.iloc[[1]])
-            with right:
-                plotar_dados(rec.iloc[[2]])
-    st.write(rec)
+        left_2, middle_2, right_2 = st.columns(3, gap="large")   
+        with left:
+            plotar_dados(rec.iloc[[0]])
+        with middle:
+            plotar_dados(rec.iloc[[1]])
+        with right:
+            plotar_dados(rec.iloc[[2]])
+        with left_2:
+            plotar_dados(rec.iloc[[3]])
+        with middle_2:
+            plotar_dados(rec.iloc[[4]])
+        with right_2:
+            plotar_dados(rec.iloc[[5]])
 
-elif input_title and (resultado["similarites"].max() < 0.7):
+elif input_title and (resultado["similarites"].max() <= 0.5):
     st.write("## Sorry, I do not have this book in my Dataset!!")
-
-
 
