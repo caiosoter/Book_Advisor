@@ -4,7 +4,6 @@ import re
 import joblib
 from io import BytesIO
 import tempfile
-from st_files_connection import FilesConnection
 import scipy.sparse as ss
 import numpy as np
 import boto3
