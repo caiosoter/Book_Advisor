@@ -76,7 +76,7 @@ def search_engine(title, books, tf_data, model):
     similarity = cosine_similarity(title_transformed, tf_data).flatten()
     index = np.argpartition(similarity, -10)[-10:]
     book_copy["similarites"] = similarity
-    resuts = book_copy.loc[index].sort_values("similarites", ascending=False)
+    resuts = book_copy.iloc[index].sort_values("similarites", ascending=False)
     resuts_filtro = resuts[resuts["Title_cleaned"].str.contains(title)]
     if not resuts_filtro.empty:
         return resuts_filtro.head(5)
@@ -102,11 +102,13 @@ df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 
+
+
 with st.sidebar:
     st.subheader("Choose three titles of your choice:")
-    input_title = st.text_input(label="Write a title")
-    input_title2 = st.text_input(label="Write a second title")
-    input_title3 = st.text_input(label="Write a third title")
+    input_title = st.text_input(label="Write a title", value="I, Robot")
+    input_title2 = st.text_input(label="Write a second title", value="The hunger games")
+    input_title3 = st.text_input(label="Write a third title", value="Catching fire")
 
     resultado = search_engine(input_title, df_books, dados_npz, model)
     resultado2 = search_engine(input_title2, df_books, dados_npz, model)
@@ -150,6 +152,17 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
         with right_2:
             plotar_dados(rec.iloc[[5]])
 
-elif input_title and (resultado["similarites"].max() <= 0.5):
+elif (input_title and input_title2 and input_title3) and (not existencia1 or not existencia2 or not existencia3):
     st.write("## Sorry, I do not have this book in my Dataset!!")
+    dicionario = {input_title:existencia1, input_title2:existencia2, input_title3:existencia3}
+    for chave, value in dicionario.items():
+        if not value:
+            st.write(f"##### - {chave}")
+else:
+    st.write("## Feel free to write somes books!!")
+
+    
+    
+
+
 
