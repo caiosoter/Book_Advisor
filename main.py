@@ -97,7 +97,7 @@ def recomendacao(escolha, df_books, df_interactions):
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
-df_books = loading_books()
+"""df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 
@@ -158,7 +158,7 @@ elif (input_title and input_title2 and input_title3) and (not existencia1 or not
         if not value:
             st.write(f"##### - {chave}")
 else:
-    st.write("## Feel free to write somes books!!")
+    st.write("## Feel free to write somes books!!")"""
 
     
     
