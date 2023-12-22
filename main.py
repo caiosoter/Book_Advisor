@@ -100,11 +100,11 @@ st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 st.write(df_books.head())
 model = load_model_from_s3("databook", "vectorizer.joblib")
-"""dados_npz = loading_tfdi()
+dados_npz = loading_tfdi()
 
 
 
-with st.sidebar:
+"""with st.sidebar:
     st.subheader("Choose three titles of your choice:")
     input_title = st.text_input(label="Write a title", value="I, Robot")
     input_title2 = st.text_input(label="Write a second title", value="The hunger games")
