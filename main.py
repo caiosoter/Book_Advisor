@@ -99,8 +99,8 @@ st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 st.write(df_books.head())
-"""model = load_model_from_s3("databook", "vectorizer.joblib")
-dados_npz = loading_tfdi()
+model = load_model_from_s3("databook", "vectorizer.joblib")
+"""dados_npz = loading_tfdi()
 
 
 
