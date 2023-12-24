@@ -54,7 +54,7 @@ def loading_interactions():
         tmpfile.write(obj)
         tmpfile_path = tmpfile.name
     dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow', blocksize='64 MiB', num_partitions=100)
-    #os.remove(tmpfile_path)
+    os.remove(tmpfile_path)
     return dados
 
     
