@@ -146,10 +146,9 @@ with st.sidebar:
     existencia2 = resultado2["similarites"].max() > 0.5
     existencia3 = resultado3["similarites"].max() > 0.5
 
-    rec = recomendacao_dask([id_escolhido1, id_escolhido2, id_escolhido3], df_books, dados_interactions)
 
 
-"""if (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
+if (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
     dados_interactions = loading_interactions()
     st.write("## About your books:")
     left, middle, right = st.columns(3, gap="large")
@@ -189,4 +188,4 @@ elif (input_title and input_title2 and input_title3) and (not existencia1 or not
         if not value:
             st.write(f"##### - {chave}")
 else:
-    st.write("## Feel free to write somes books!!")"""
+    st.write("## Feel free to write somes books!!")
