@@ -7,6 +7,7 @@ from io import BytesIO
 import tempfile
 import scipy.sparse as ss
 import numpy as np
+import os
 import boto3
 import logging
 from sklearn.metrics.pairwise import cosine_similarity
@@ -48,7 +49,12 @@ def loading_books():
 def loading_interactions():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
-    dados = dd.read_parquet(BytesIO(obj))
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tmpfile:
+        tmpfile.write(obj)
+        tmpfile_path = tmpfile.name
+    dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow')
+    os.remove(tmpfile_path)
     return dados
 
     
@@ -122,6 +128,8 @@ st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
 
 dados_interactions = loading_interactions()
+
+
 """df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
