@@ -45,7 +45,7 @@ def loading_books():
     dados = pd.read_feather(BytesIO(obj))
     return dados
 
-@st.cache_data(ttl=24*3600)
+@st.cache_data
 def loading_interactions():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
@@ -54,7 +54,7 @@ def loading_interactions():
         tmpfile.write(obj)
         tmpfile_path = tmpfile.name
     dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow')
-    os.remove(tmpfile_path)
+    #os.remove(tmpfile_path)
     return dados
 
     
