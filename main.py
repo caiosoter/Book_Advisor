@@ -53,7 +53,7 @@ def loading_interactions():
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tmpfile:
         tmpfile.write(obj)
         tmpfile_path = tmpfile.name
-    dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow', blocksize='64 MiB', num_partitions=100)
+    dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow')
     os.remove(tmpfile_path)
     return dados
 
