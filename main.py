@@ -106,7 +106,8 @@ def recomendacao_dask(escolha, df_books, df_interactions):
     # Continuação da sua lógica de recomendação
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
     usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)].compute()
-    id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
+    return usuarios
+    """id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
     id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
     resultado = id_books_usuarios["book_id"].value_counts(ascending=False).compute().to_frame().reset_index()
 
@@ -119,7 +120,7 @@ def recomendacao_dask(escolha, df_books, df_interactions):
 
     # Sorting em Dask DataFrame
     resultado = resultado.sort_values("score", ascending=False).sort_values("count", ascending=False).head(6)
-    return resultado
+    return resultado"""
 
 
 
@@ -130,8 +131,11 @@ df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 dados_interactions = loading_interactions()
-
 st.write(dados_interactions)
+
+rec = recomendacao_dask(["2767052"], df_books, dados_interactions)
+st.write(rec)
+
 """with st.sidebar:
     st.subheader("Choose three titles of your choice:")
     input_title = st.text_input(label="Write a title", value="I, Robot")
