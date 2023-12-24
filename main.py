@@ -132,7 +132,7 @@ dados_npz = loading_tfdi()
 dados_interactions = loading_interactions()
 
 
-with st.sidebar:
+"""with st.sidebar:
     st.subheader("Choose three titles of your choice:")
     input_title = st.text_input(label="Write a title", value="I, Robot")
     input_title2 = st.text_input(label="Write a second title", value="The hunger games")
@@ -188,4 +188,4 @@ elif (input_title and input_title2 and input_title3) and (not existencia1 or not
         if not value:
             st.write(f"##### - {chave}")
 else:
-    st.write("## Feel free to write somes books!!")
+    st.write("## Feel free to write somes books!!")"""
