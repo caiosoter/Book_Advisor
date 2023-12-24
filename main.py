@@ -126,14 +126,13 @@ def recomendacao_dask(escolha, df_books, df_interactions):
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
-dados_interactions = loading_interactions()
 df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 
 
 
-"""with st.sidebar:
+with st.sidebar:
     st.subheader("Choose three titles of your choice:")
     input_title = st.text_input(label="Write a title", value="I, Robot")
     input_title2 = st.text_input(label="Write a second title", value="The hunger games")
@@ -162,7 +161,7 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
     id_escolhido1 = resultado.iloc[[0]]["book_id"].values[0]
     id_escolhido2 = resultado2.iloc[[0]]["book_id"].values[0]
     id_escolhido3 = resultado3.iloc[[0]]["book_id"].values[0]
-    rec = recomendacao([id_escolhido1, id_escolhido2, id_escolhido3], df_books, dados_interactions)
+    rec = recomendacao_dask([id_escolhido1, id_escolhido2, id_escolhido3], df_books, dados_interactions)
 
     if not rec.empty:
         st.write("## My recommendations are:")
@@ -188,4 +187,4 @@ elif (input_title and input_title2 and input_title3) and (not existencia1 or not
         if not value:
             st.write(f"##### - {chave}")
 else:
-    st.write("## Feel free to write somes books!!")"""
+    st.write("## Feel free to write somes books!!")
