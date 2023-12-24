@@ -131,7 +131,7 @@ model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 dados_interactions = loading_interactions()
 
-st.write(dados_interactions.head())
+st.write(dados_interactions)
 """with st.sidebar:
     st.subheader("Choose three titles of your choice:")
     input_title = st.text_input(label="Write a title", value="I, Robot")
