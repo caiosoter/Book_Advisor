@@ -129,7 +129,7 @@ st.subheader('I would like to suggest you a new book!!')
 
 dados_interactions = loading_interactions()
 
-
+st.write(dados_interactions)
 """df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
