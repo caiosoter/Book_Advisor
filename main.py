@@ -1,4 +1,5 @@
 import streamlit as st
+import dask.dataframe as dd
 import pandas as pd
 import re
 import joblib
@@ -43,11 +44,11 @@ def loading_books():
     dados = pd.read_feather(BytesIO(obj))
     return dados
 
-@st.cache_data
+@st.cache_data(ttl=24*3600)
 def loading_interactions():
     s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions.feather")["Body"].read()
-    dados = pd.read_feather(BytesIO(obj))
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
+    dados = dd.read_parquet(BytesIO(obj))
     return dados
 
     
@@ -94,10 +95,34 @@ def recomendacao(escolha, df_books, df_interactions):
     resultado = resultado.sort_values(["score" , "count"], ascending=[False, False]).head(6)
     return resultado
 
+
+def recomendacao_dask(escolha, df_books, df_interactions):
+    # Continuação da sua lógica de recomendação
+    csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
+    usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)].compute()
+    id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
+    id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
+    resultado = id_books_usuarios["book_id"].value_counts(ascending=False).compute().to_frame().reset_index()
+
+    # Merging em Dask DataFrame
+    resultado = pd.merge(resultado, df_books, how="inner", left_on="book_id", right_on="book_id_csv")
+
+    # Continuação da lógica de recomendação
+    resultado["score"] = resultado["count"] * (resultado["count"] / resultado["ratings_count"])
+    resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y": "book_id"})
+
+    # Sorting em Dask DataFrame
+    resultado = resultado.sort_values("score", ascending=False).sort_values("count", ascending=False).head(6)
+    return resultado
+
+
+
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
-df_books = loading_books()
+
+dados_interactions = loading_interactions()
+"""df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 
@@ -158,4 +183,4 @@ elif (input_title and input_title2 and input_title3) and (not existencia1 or not
         if not value:
             st.write(f"##### - {chave}")
 else:
-    st.write("## Feel free to write somes books!!")
+    st.write("## Feel free to write somes books!!")"""
