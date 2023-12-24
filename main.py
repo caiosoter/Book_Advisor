@@ -130,7 +130,8 @@ df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 dados_interactions = loading_interactions()
-
+rec = recomendacao_dask(["2767052"], df_books, dados_interactions)
+st.write(rec)
 
 """with st.sidebar:
     st.subheader("Choose three titles of your choice:")
