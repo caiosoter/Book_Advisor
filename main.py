@@ -53,7 +53,7 @@ def loading_interactions():
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tmpfile:
         tmpfile.write(obj)
         tmpfile_path = tmpfile.name
-    dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow')
+    dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow', blocksize="128 MiB")
     os.remove(tmpfile_path)
 
     #dados = dd.read_parquet(st.secrets["s3_path"], 
