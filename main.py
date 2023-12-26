@@ -47,18 +47,19 @@ def loading_books():
 
 @st.cache_data
 def loading_interactions():
-    """obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
+    s3_client = get_s3_client()
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tmpfile:
         tmpfile.write(obj)
         tmpfile_path = tmpfile.name
     dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow')
-    #os.remove(tmpfile_path)"""
+    #os.remove(tmpfile_path)
 
-    dados = dd.read_parquet(st.secrets["s3_path"], 
-                            storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
-                                            "secret":st.secrets["AWS_SECRET_ACCESS_KEY"]}, 
-                            blocksize="128 MiB")
+    #dados = dd.read_parquet(st.secrets["s3_path"], 
+    #                        storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
+    #                                        "secret":st.secrets["AWS_SECRET_ACCESS_KEY"]}, 
+    #                        blocksize="128 MiB")
     return dados
 
     
