@@ -45,7 +45,7 @@ def loading_books():
     dados = pd.read_feather(BytesIO(obj))
     return dados
 
-
+@st.cache_data
 def loading_interactions():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
