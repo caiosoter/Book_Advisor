@@ -3,6 +3,7 @@ import dask.dataframe as dd
 import pandas as pd
 import re
 import joblib
+import os
 from io import BytesIO
 import tempfile
 import scipy.sparse as ss
@@ -54,7 +55,7 @@ def loading_interactions():
         tmpfile.write(obj)
         tmpfile_path = tmpfile.name
     dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow')
-    #os.remove(tmpfile_path)
+    os.remove(tmpfile_path)
 
     #dados = dd.read_parquet(st.secrets["s3_path"], 
     #                        storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
@@ -155,9 +156,9 @@ st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
-dados_interactions = loading_interactions()
+#dados_interactions = loading_interactions()
 
-st.write(dados_interactions)
+#st.write(dados_interactions)
 
 #escolha = ["2767052"]
 #livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
