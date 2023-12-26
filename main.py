@@ -7,7 +7,6 @@ from io import BytesIO
 import tempfile
 import scipy.sparse as ss
 import numpy as np
-import os
 import boto3
 import logging
 from sklearn.metrics.pairwise import cosine_similarity
@@ -45,16 +44,21 @@ def loading_books():
     dados = pd.read_feather(BytesIO(obj))
     return dados
 
+
 @st.cache_data
 def loading_interactions():
-    s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
+    """obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tmpfile:
         tmpfile.write(obj)
         tmpfile_path = tmpfile.name
     dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow')
-    #os.remove(tmpfile_path)
+    #os.remove(tmpfile_path)"""
+
+    dados = dd.read_parquet(st.secrets["s3_path"], 
+                            storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
+                                            "secret":st.secrets["AWS_SECRET_ACCESS_KEY"]}, 
+                            blocksize="128 MiB")
     return dados
 
     
@@ -89,7 +93,7 @@ def search_engine(title, books, tf_data, model):
     return resuts.head(5)
 
 
-def recomendacao(escolha, df_books, df_interactions):
+"""def recomendacao(escolha, df_books, df_interactions):
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"].values
     usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id))&(df_interactions["rating"] >= 4)]
     id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
@@ -99,15 +103,15 @@ def recomendacao(escolha, df_books, df_interactions):
     resultado["score"] = resultado["count"] * (resultado["count"]/resultado["ratings_count"])
     resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y":"book_id"})
     resultado = resultado.sort_values(["score" , "count"], ascending=[False, False]).head(6)
-    return resultado
+    return resultado"""
 
 
-def recomendacao_dask(escolha, df_books, df_interactions):
+"""def recomendacao_dask(escolha, df_books, df_interactions):
     # Continuação da sua lógica de recomendação
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
     usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)].compute()
-    return usuarios
-    """id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
+
+    id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
     id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
     resultado = id_books_usuarios["book_id"].value_counts(ascending=False).compute().to_frame().reset_index()
 
@@ -131,10 +135,10 @@ df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 dados_interactions = loading_interactions()
-st.write(dados_interactions)
 
-rec = recomendacao_dask(["2767052"], df_books, dados_interactions)
-st.write(rec)
+
+
+
 
 """with st.sidebar:
     st.subheader("Choose three titles of your choice:")
