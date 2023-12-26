@@ -156,11 +156,13 @@ model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 dados_interactions = loading_interactions()
 
-escolha = ["2767052"]
-livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
-recomendacoes = analise_final(livros_potenciais, df_books)
+st.write(dados_interactions)
 
-st.write(recomendacoes)
+#escolha = ["2767052"]
+#livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
+#recomendacoes = analise_final(livros_potenciais, df_books)
+
+#st.write(recomendacoes)
 
 
 
