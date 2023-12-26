@@ -93,7 +93,7 @@ def search_engine(title, books, tf_data, model):
     return resuts.head(5)
 
 
-"""def recomendacao(escolha, df_books, df_interactions):
+def recomendacao(escolha, df_books, df_interactions):
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"].values
     usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id))&(df_interactions["rating"] >= 4)]
     id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
@@ -103,7 +103,7 @@ def search_engine(title, books, tf_data, model):
     resultado["score"] = resultado["count"] * (resultado["count"]/resultado["ratings_count"])
     resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y":"book_id"})
     resultado = resultado.sort_values(["score" , "count"], ascending=[False, False]).head(6)
-    return resultado"""
+    return resultado
 
 
 def recomendacao_dask_2(escolha, df_books, df_interactions):
@@ -128,6 +128,26 @@ def recomendacao_dask_2(escolha, df_books, df_interactions):
 
 
 
+def recomendacao_dask(df_interactions, escolha, df_books):
+    csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
+    usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)]
+    id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
+    id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
+    resultado = id_books_usuarios["book_id"].value_counts(ascending=False).to_frame().reset_index()
+    return resultado
+
+
+def analise_final(resultado, df_books):
+    resultado = resultado.groupby("book_id").sum().reset_index()
+    # Merging em Dask DataFrame
+    resultado = pd.merge(resultado, df_books, how="inner", left_on="book_id", right_on="book_id_csv")
+    # Continuação da lógica de recomendação
+    resultado["score"] = resultado["count"] * (resultado["count"] / resultado["ratings_count"])
+    resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y": "book_id"})
+    resultado = resultado.sort_values(["score", "count"], ascending=[False, False]).head(6)
+    return resultado
+
+
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
@@ -135,7 +155,12 @@ df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
 dados_interactions = loading_interactions()
-st.write(dados_interactions)
+
+escolha = ["2767052"]
+livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
+recomendacoes = analise_final(livros_potenciais, df_books)
+
+st.write(recomendacoes)
 
 
 
