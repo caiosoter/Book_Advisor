@@ -46,7 +46,6 @@ def loading_books():
     return dados
 
 
-@st.cache_data
 def loading_interactions():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
@@ -156,9 +155,8 @@ st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
-#dados_interactions = loading_interactions()
-
-#st.write(dados_interactions)
+dados_interactions = loading_interactions()
+st.write(dados_interactions)
 
 #escolha = ["2767052"]
 #livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
