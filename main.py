@@ -147,7 +147,7 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
     id_escolhido3 = resultado3.iloc[[0]]["book_id"].values[0]
 
     lista_df = []
-    for i in range(11):
+    for i in range(13):
         df_interactions = loading_interactions(i)
         rec = recomendacao_dask(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
         lista_df.append(rec)
