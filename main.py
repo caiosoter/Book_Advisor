@@ -47,15 +47,10 @@ def loading_books():
     return dados
 
 
-def loading_interactions():
+def loading_interactions(num=0):
     s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
-
-    with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tmpfile:
-        tmpfile.write(obj)
-        tmpfile_path = tmpfile.name
-        dados = dd.read_parquet(tmpfile_path , engine='pyarrow', blocksize="64 MiB")
-    os.remove(tmpfile_path)
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key=f"interactions/part{num}.parquet")["Body"].read()
+    dados = pd.read_parquet(BytesIO(obj))
     return dados
 
     
@@ -91,6 +86,7 @@ def search_engine(title, books, tf_data, model):
 
 
 
+
 def recomendacao_dask(df_interactions, escolha, df_books):
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
     usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)]
@@ -117,23 +113,10 @@ st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
-dados_interactions = loading_interactions()
-st.write(dados_interactions)
-
-
-escolha = ["2767052"]
-livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False)
-resut = livros_potenciais.compute()
-st.write(resut)
-
-#recomendacoes = analise_final(livros_potenciais, df_books)
-#st.write(recomendacoes)
 
 
 
-
-
-"""with st.sidebar:
+with st.sidebar:
     st.subheader("Choose three titles of your choice:")
     input_title = st.text_input(label="Write a title", value="I, Robot")
     input_title2 = st.text_input(label="Write a second title", value="The hunger games")
@@ -150,7 +133,6 @@ st.write(resut)
 
 
 if (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
-    dados_interactions = loading_interactions()
     st.write("## About your books:")
     left, middle, right = st.columns(3, gap="large")
     with left:
@@ -163,7 +145,15 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
     id_escolhido1 = resultado.iloc[[0]]["book_id"].values[0]
     id_escolhido2 = resultado2.iloc[[0]]["book_id"].values[0]
     id_escolhido3 = resultado3.iloc[[0]]["book_id"].values[0]
-    rec = recomendacao_dask([id_escolhido1, id_escolhido2, id_escolhido3], df_books, dados_interactions)
+
+    lista_df = []
+    for i in range(11):
+        df_interactions = loading_interactions(i)
+        rec = recomendacao_dask(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
+        lista_df.append(rec)
+    dados_finais = pd.concat(lista_df, ignore_index=True)
+    del lista_df
+    rec = analise_final(dados_finais, df_books)
 
     if not rec.empty:
         st.write("## My recommendations are:")
@@ -189,4 +179,4 @@ elif (input_title and input_title2 and input_title3) and (not existencia1 or not
         if not value:
             st.write(f"##### - {chave}")
 else:
-    st.write("## Feel free to write somes books!!")"""
+    st.write("## Feel free to write somes books!!")
