@@ -11,6 +11,7 @@ import numpy as np
 import boto3
 import logging
 from sklearn.metrics.pairwise import cosine_similarity
+st.set_page_config(page_title="Book Advisor", page_icon=":book")
 
 @st.cache_resource
 def get_s3_client():
@@ -54,7 +55,6 @@ def loading_interactions():
         tmpfile.write(obj)
         tmpfile_path = tmpfile.name
         dados = dd.read_parquet(tmpfile_path , engine='pyarrow', blocksize="64 MiB")
-    print(tmpfile_path)
     os.remove(tmpfile_path)
     return dados
 
@@ -90,40 +90,6 @@ def search_engine(title, books, tf_data, model):
     return resuts.head(5)
 
 
-def recomendacao(escolha, df_books, df_interactions):
-    csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"].values
-    usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id))&(df_interactions["rating"] >= 4)]
-    id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
-    id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
-    resultado = id_books_usuarios["book_id"].value_counts(ascending=False).to_frame().reset_index()
-    resultado = pd.merge(resultado, df_books, how="inner", left_on="book_id", right_on="book_id_csv")
-    resultado["score"] = resultado["count"] * (resultado["count"]/resultado["ratings_count"])
-    resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y":"book_id"})
-    resultado = resultado.sort_values(["score" , "count"], ascending=[False, False]).head(6)
-    return resultado
-
-
-def recomendacao_dask_2(escolha, df_books, df_interactions):
-    # Continuação da sua lógica de recomendação
-    csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
-    usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)].compute()
-
-    id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
-    id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
-    resultado = id_books_usuarios["book_id"].value_counts(ascending=False).compute().to_frame().reset_index()
-
-    # Merging em Dask DataFrame
-    resultado = pd.merge(resultado, df_books, how="inner", left_on="book_id", right_on="book_id_csv")
-
-    # Continuação da lógica de recomendação
-    resultado["score"] = resultado["count"] * (resultado["count"] / resultado["ratings_count"])
-    resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y": "book_id"})
-
-    # Sorting em Dask DataFrame
-    resultado = resultado.sort_values("score", ascending=False).sort_values("count", ascending=False).head(6)
-    return resultado
-
-
 
 def recomendacao_dask(df_interactions, escolha, df_books):
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
@@ -145,7 +111,7 @@ def analise_final(resultado, df_books):
     return resultado
 
 
-st.set_page_config(page_title="Book Advisor", page_icon=":book")
+
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
@@ -159,7 +125,6 @@ escolha = ["2767052"]
 livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False)
 resut = livros_potenciais.compute()
 st.write(resut)
-
 
 #recomendacoes = analise_final(livros_potenciais, df_books)
 #st.write(recomendacoes)
