@@ -47,19 +47,19 @@ def loading_books():
 
 
 def loading_interactions():
-    """s3_client = get_s3_client()
+    s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_interactions2.parquet")["Body"].read()
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tmpfile:
         tmpfile.write(obj)
-        tmpfile_path = tmpfile.name
-    dados = dd.read_parquet(tmpfile_path, assume_missing=True, engine='pyarrow', blocksize="128 MiB")
-    os.remove(tmpfile_path)"""
+        #tmpfile_path = tmpfile.name
+        dados = dd.read_parquet(tmpfile.name, assume_missing=True, engine='pyarrow', blocksize="128 MiB")
+    #os.remove(tmpfile_path)
 
-    dados = dd.read_parquet(st.secrets["s3_path"], 
+    """dados = dd.read_parquet(st.secrets["s3_path"], 
                             storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
                                             "secret":st.secrets["AWS_SECRET_ACCESS_KEY"]}, 
-                            blocksize="64 MiB")
+                            blocksize="64 MiB")"""
     return dados
 
     
@@ -155,17 +155,8 @@ st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
-
-
-dados = dd.read_parquet(st.secrets["s3_path"], 
-                            storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
-                                            "secret":st.secrets["AWS_SECRET_ACCESS_KEY"]}, 
-                            blocksize="64 MiB")
-
-st.write(dados)
-
-#dados_interactions = loading_interactions()
-#st.write(dados_interactions)
+dados_interactions = loading_interactions()
+st.write(dados_interactions)
 
 #escolha = ["2767052"]
 #livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
