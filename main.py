@@ -155,8 +155,15 @@ st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
-dados_interactions = loading_interactions()
-st.write(dados_interactions)
+
+
+dados = dd.read_parquet(st.secrets["s3_path"], 
+                            storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
+                                            "secret":st.secrets["AWS_SECRET_ACCESS_KEY"]}, 
+                            blocksize="64 MiB")
+
+#dados_interactions = loading_interactions()
+#st.write(dados_interactions)
 
 #escolha = ["2767052"]
 #livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
