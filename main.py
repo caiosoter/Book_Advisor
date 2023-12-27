@@ -52,9 +52,10 @@ def loading_interactions():
 
     with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as tmpfile:
         tmpfile.write(obj)
-        #tmpfile_path = tmpfile.name
-        dados = dd.read_parquet(tmpfile.name, assume_missing=True, engine='pyarrow', blocksize="128 MiB")
-    #os.remove(tmpfile_path)
+        tmpfile_path = tmpfile.name
+        dados = dd.read_parquet(tmpfile_path , engine='pyarrow', blocksize="64 MiB")
+    print(tmpfile_path)
+    os.remove(tmpfile_path)
 
     """dados = dd.read_parquet(st.secrets["s3_path"], 
                             storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
