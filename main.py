@@ -23,8 +23,7 @@ def load_model_from_s3(bucket, key):
     with tempfile.TemporaryFile() as fp:
         s3_client.download_fileobj(Fileobj=fp, Bucket=bucket, Key=key)
         fp.seek(0)
-
-    return joblib.load(fp)
+        return joblib.load(fp)
 
     
 @st.cache_data
