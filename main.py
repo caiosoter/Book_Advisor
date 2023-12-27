@@ -86,7 +86,7 @@ def search_engine(title, books, tf_data, model):
 
 
 
-def recomendacao_dask(df_interactions, escolha, df_books):
+def recomendacao(df_interactions, escolha, df_books):
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
     usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)]
     id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
@@ -148,7 +148,7 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
     lista_df = []
     for i in range(23):
         df_interactions = loading_interactions(i)
-        rec = recomendacao_dask(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
+        rec = recomendacao(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
         lista_df.append(rec)
     dados_finais = pd.concat(lista_df, ignore_index=True)
     del lista_df
