@@ -156,8 +156,9 @@ st.write(dados_interactions)
 
 
 escolha = ["2767052"]
-livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
-st.write(livros_potenciais)
+livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False)
+resut = livros_potenciais.compute()
+st.write(resut)
 
 
 #recomendacoes = analise_final(livros_potenciais, df_books)
