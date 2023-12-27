@@ -162,6 +162,8 @@ dados = dd.read_parquet(st.secrets["s3_path"],
                                             "secret":st.secrets["AWS_SECRET_ACCESS_KEY"]}, 
                             blocksize="64 MiB")
 
+st.write(dados)
+
 #dados_interactions = loading_interactions()
 #st.write(dados_interactions)
 
