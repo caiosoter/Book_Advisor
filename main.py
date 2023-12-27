@@ -56,11 +56,6 @@ def loading_interactions():
         dados = dd.read_parquet(tmpfile_path , engine='pyarrow', blocksize="64 MiB")
     print(tmpfile_path)
     os.remove(tmpfile_path)
-
-    """dados = dd.read_parquet(st.secrets["s3_path"], 
-                            storage_options={"key":st.secrets["AWS_ACCESS_KEY_ID"],
-                                            "secret":st.secrets["AWS_SECRET_ACCESS_KEY"]}, 
-                            blocksize="64 MiB")"""
     return dados
 
     
@@ -159,8 +154,12 @@ dados_npz = loading_tfdi()
 dados_interactions = loading_interactions()
 st.write(dados_interactions)
 
-#escolha = ["2767052"]
-#livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
+
+escolha = ["2767052"]
+livros_potenciais = dados_interactions.map_partitions(recomendacao_dask, escolha, df_books, align_dataframes=False).compute()
+st.write(livros_potenciais)
+
+
 #recomendacoes = analise_final(livros_potenciais, df_books)
 #st.write(recomendacoes)
 
