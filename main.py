@@ -7,6 +7,7 @@ import tempfile
 import scipy.sparse as ss
 import numpy as np
 import boto3
+import logging
 from sklearn.metrics.pairwise import cosine_similarity
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
 
@@ -19,11 +20,14 @@ def get_s3_client():
 
 @st.cache_resource
 def load_model_from_s3(bucket, key):
-    s3_client = get_s3_client()
-    with tempfile.TemporaryFile() as fp:
-        s3_client.download_fileobj(Fileobj=fp, Bucket=bucket, Key=key)
-        fp.seek(0)
-        return joblib.load(fp)
+     s3_client = get_s3_client()
+     try:
+         with tempfile.TemporaryFile() as fp:
+             s3_client.download_fileobj(Fileobj=fp, Bucket=bucket, Key=key)
+             fp.seek(0)
+             return joblib.load(fp)
+     except Exception as e:
+         raise logging.exception(e)
 
     
 @st.cache_data
@@ -144,9 +148,9 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
         rec = recomendacao(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
         lista_df.append(rec)
     dados_finais = pd.concat(lista_df, ignore_index=True)
-    rec = analise_final(dados_finais, df_books)
     del lista_df
-    del dados_finais
+    rec = analise_final(dados_finais, df_books)
+
     if not rec.empty:
         st.write("## My recommendations are:")
         left, middle, right = st.columns(3, gap="large")
