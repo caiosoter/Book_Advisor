@@ -6,10 +6,13 @@ from io import BytesIO
 import tempfile
 import scipy.sparse as ss
 import numpy as np
+import os
 import boto3
+from memory_profiler import profile
 import logging
 from sklearn.metrics.pairwise import cosine_similarity
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
+
 
 @st.cache_resource
 def get_s3_client():
@@ -18,33 +21,41 @@ def get_s3_client():
          aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"])
    return s3
 
+
 @st.cache_resource
 def load_model_from_s3(bucket, key):
-     s3_client = get_s3_client()
-     try:
-         with tempfile.TemporaryFile() as fp:
-             s3_client.download_fileobj(Fileobj=fp, Bucket=bucket, Key=key)
-             fp.seek(0)
-             return joblib.load(fp)
-     except Exception as e:
-         raise logging.exception(e)
+    s3_client = get_s3_client()
+    try:
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            s3_client.download_fileobj(Fileobj=temp_file, Bucket=bucket, Key=key)
+            temp_file.seek(0)
+            model = joblib.load(temp_file)
+        return model
+    except Exception as e:
+        logging.exception(e)
+    finally:
+        # Ensure the temporary file is deleted
+        if 'temp_file' in locals():
+            os.unlink(temp_file.name)
 
     
-@st.cache_data
+@st.cache_data(max_entries=3)
 def loading_tfdi():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi.npz")["Body"].read()
     dados = ss.load_npz(BytesIO(obj))
     return dados
 
-@st.cache_data
+
+@st.cache_data(max_entries=3)
 def loading_books():
     s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_books2.feather")["Body"].read()
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_books.feather")["Body"].read()
     dados = pd.read_feather(BytesIO(obj))
     return dados
 
 
+@st.cache_data(ttl=200)
 def loading_interactions(num=0):
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key=f"interactions/part{num}.parquet")["Body"].read()
@@ -54,7 +65,7 @@ def loading_interactions(num=0):
     
 def plotar_dados(df):
         author = df["author"].tolist()[0]
-        year = df["publishedDate"].tolist()[0]
+        #year = df["publishedDate"].tolist()[0]
         nome = df["Title"].tolist()[0]
         url = df["url"].tolist()[0]
         imagem = df["image"].tolist()[0]
@@ -64,10 +75,9 @@ def plotar_dados(df):
             st.image(st.secrets["link_sem_imagem"])
         st.write(f"**Name**: {nome}")
         st.write(f"**Author:** {author}")
-        st.write(f"**Published date:** {year}")
+        #st.write(f"**Published date:** {year}")
         st.write(f"**More information**: {url}")
 
-            
 
 def search_engine(title, books, tf_data, model):
     book_copy = books.copy()
@@ -81,7 +91,6 @@ def search_engine(title, books, tf_data, model):
     if not resuts_filtro.empty:
         return resuts_filtro.head(5)
     return resuts.head(5)
-
 
 
 
@@ -103,14 +112,11 @@ def analise_final(resultado, df_books):
     return resultado
 
 
-
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer.joblib")
 dados_npz = loading_tfdi()
-
-
 
 with st.sidebar:
     st.subheader("Choose three titles of your choice:")
@@ -125,7 +131,6 @@ with st.sidebar:
     existencia1 = resultado["similarites"].max() > 0.5
     existencia2 = resultado2["similarites"].max() > 0.5
     existencia3 = resultado3["similarites"].max() > 0.5
-
 
 
 if (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
@@ -148,8 +153,9 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
         rec = recomendacao(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
         lista_df.append(rec)
     dados_finais = pd.concat(lista_df, ignore_index=True)
-    del lista_df
     rec = analise_final(dados_finais, df_books)
+    del lista_df
+    del dados_finais
 
     if not rec.empty:
         st.write("## My recommendations are:")
