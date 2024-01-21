@@ -50,7 +50,7 @@ def loading_tfdi():
 @st.cache_data(max_entries=3)
 def loading_books():
     s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_books.feather")["Body"].read()
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_books_reduzido.feather")["Body"].read()
     dados = pd.read_feather(BytesIO(obj))
     return dados
 
