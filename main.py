@@ -42,7 +42,7 @@ def load_model_from_s3(bucket, key):
 @st.cache_data(max_entries=3)
 def loading_tfdi():
     s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi.npz")["Body"].read()
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi_reduzido.npz")["Body"].read()
     dados = ss.load_npz(BytesIO(obj))
     return dados
 
@@ -127,7 +127,7 @@ def recomendacao(df_interactions, escolha, df_books):
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
-model = load_model_from_s3("databook", "vectorizer.joblib")
+model = load_model_from_s3("databook", "vectorizer_reduzido.joblib")
 dados_npz = loading_tfdi()
 
 with st.sidebar:
