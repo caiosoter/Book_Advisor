@@ -65,7 +65,6 @@ def loading_interactions():
     
 def plotar_dados(df):
         author = df["author"].tolist()[0]
-        #year = df["publishedDate"].tolist()[0]
         nome = df["Title"].tolist()[0]
         url = df["url"].tolist()[0]
         imagem = df["image"].tolist()[0]
@@ -75,7 +74,6 @@ def plotar_dados(df):
             st.image(st.secrets["link_sem_imagem"])
         st.write(f"**Name**: {nome}")
         st.write(f"**Author:** {author}")
-        #st.write(f"**Published date:** {year}")
         st.write(f"**More information**: {url}")
 
 
