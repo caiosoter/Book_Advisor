@@ -123,9 +123,9 @@ with st.sidebar:
     resultado2 = search_engine(input_title2, df_books, dados_npz, model)
     resultado3 = search_engine(input_title3, df_books, dados_npz, model)
 
-    existencia1 = resultado["similarites"].max() > 0.5
-    existencia2 = resultado2["similarites"].max() > 0.5
-    existencia3 = resultado3["similarites"].max() > 0.5
+    existencia1 = resultado["similarites"].max() > 0.6
+    existencia2 = resultado2["similarites"].max() > 0.6
+    existencia3 = resultado3["similarites"].max() > 0.6
 
 
 if (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
