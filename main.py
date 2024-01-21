@@ -55,10 +55,10 @@ def loading_books():
     return dados
 
 
-@st.cache_data(ttl=200)
-def loading_interactions(num=0):
+@st.cache_data(max_entries=1)
+def loading_interactions():
     s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key=f"interactions/part{num}.parquet")["Body"].read()
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key=f"interactions/goodreads_interactions_reduzido.parquet")["Body"].read()
     dados = pd.read_parquet(BytesIO(obj))
     return dados
 
@@ -94,7 +94,7 @@ def search_engine(title, books, tf_data, model):
 
 
 
-def recomendacao(df_interactions, escolha, df_books):
+"""def recomendacao(df_interactions, escolha, df_books):
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
     usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)]
     id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
@@ -109,6 +109,18 @@ def analise_final(resultado, df_books):
     resultado["score"] = resultado["count"] * (resultado["count"] / resultado["ratings_count"])
     resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y": "book_id"})
     resultado = resultado.sort_values(["score", "count"], ascending=[False, False]).head(6)
+    return resultado"""
+
+def recomendacao(df_interactions, escolha, df_books):
+    csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"].values
+    usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id))&(df_interactions["rating"] >= 4)]
+    id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
+    id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
+    resultado = id_books_usuarios["book_id"].value_counts(ascending=False).to_frame().reset_index()
+    resultado = pd.merge(resultado, df_books, how="inner", left_on="book_id", right_on="book_id_csv")
+    resultado["score"] = resultado["count"] * (resultado["count"]/resultado["ratings_count"])
+    resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y":"book_id"})
+    resultado = resultado.sort_values(["score" , "count"], ascending=[False, False]).head(6)
     return resultado
 
 
@@ -147,15 +159,8 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
     id_escolhido2 = resultado2.iloc[[0]]["book_id"].values[0]
     id_escolhido3 = resultado3.iloc[[0]]["book_id"].values[0]
 
-    lista_df = []
-    for i in range(23):
-        df_interactions = loading_interactions(i)
-        rec = recomendacao(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
-        lista_df.append(rec)
-    dados_finais = pd.concat(lista_df, ignore_index=True)
-    rec = analise_final(dados_finais, df_books)
-    del lista_df
-    del dados_finais
+    df_interactions = loading_interactions()
+    rec = recomendacao(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
 
     if not rec.empty:
         st.write("## My recommendations are:")
