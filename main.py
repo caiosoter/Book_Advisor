@@ -94,23 +94,6 @@ def search_engine(title, books, tf_data, model):
 
 
 
-"""def recomendacao(df_interactions, escolha, df_books):
-    csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"]
-    usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id)) & (df_interactions["rating"] >= 4)]
-    id_books_usuarios = df_interactions[df_interactions["user_id"].isin(usuarios["user_id"])]
-    id_books_usuarios = id_books_usuarios[~id_books_usuarios["book_id"].isin(csv_id)]
-    resultado = id_books_usuarios["book_id"].value_counts(ascending=False).to_frame().reset_index()
-    return resultado
-
-
-def analise_final(resultado, df_books):
-    resultado = resultado.groupby("book_id").sum().reset_index()
-    resultado = pd.merge(resultado, df_books, how="inner", left_on="book_id", right_on="book_id_csv")
-    resultado["score"] = resultado["count"] * (resultado["count"] / resultado["ratings_count"])
-    resultado = resultado.drop(columns=["book_id_x"]).rename(columns={"book_id_y": "book_id"})
-    resultado = resultado.sort_values(["score", "count"], ascending=[False, False]).head(6)
-    return resultado"""
-
 def recomendacao(df_interactions, escolha, df_books):
     csv_id = df_books[df_books["book_id"].isin(escolha)]["book_id_csv"].values
     usuarios = df_interactions[(df_interactions["book_id"].isin(csv_id))&(df_interactions["rating"] >= 4)]
