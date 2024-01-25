@@ -8,7 +8,6 @@ import scipy.sparse as ss
 import numpy as np
 import os
 import boto3
-from memory_profiler import profile
 import logging
 from sklearn.metrics.pairwise import cosine_similarity
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
