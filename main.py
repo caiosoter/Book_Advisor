@@ -38,7 +38,7 @@ def load_model_from_s3(bucket, key):
             os.unlink(temp_file.name)
 
     
-@st.cache_data(max_entries=2)
+@st.cache_data(max_entries=1)
 def loading_tfdi():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi_reduzido.npz")["Body"].read()
@@ -46,7 +46,7 @@ def loading_tfdi():
     return dados
 
 
-@st.cache_data(max_entries=2)
+@st.cache_data(max_entries=1)
 def loading_books():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_books_reduzido.feather")["Body"].read()
