@@ -37,6 +37,7 @@ def load_model_from_s3(bucket, key):
         if 'temp_file' in locals():
             os.unlink(temp_file.name)
 
+
     
 @st.cache_data(max_entries=1)
 def loading_tfdi():
@@ -76,7 +77,7 @@ def plotar_dados(df):
         st.write(f"**More information**: {url}")
 
 
-def search_engine(title, books, tf_data, model):
+"""def search_engine(title, books, tf_data, model):
     book_copy = books.copy()
     title = re.sub("[^a-zA-Z0-9 ]", "", title.lower())
     title_transformed = model.transform([title])
@@ -87,7 +88,26 @@ def search_engine(title, books, tf_data, model):
     resuts_filtro = resuts[resuts["Title_cleaned"].str.contains(title)]
     if not resuts_filtro.empty:
         return resuts_filtro.head(5)
-    return resuts.head(5)
+    return resuts.head(5)"""
+
+
+def search_engine_authors(author, df_books, tf_data, model):
+    book_copy = df_books.copy()
+    author = re.sub("[^a-zA-Z0-9 ]", "", author.lower())
+    author_transformed = model.transform([author])
+    similarity = cosine_similarity(author_transformed, tf_data).flatten()
+    book_copy["similarites_total"] = similarity * book_copy["similarities"]
+    results = book_copy.sort_values("similarites_total", ascending=False).head(5)
+    return results
+
+
+def search_engine(title, books, tf_data, model):
+    book_copy = books.copy()
+    title = re.sub("[^a-zA-Z0-9 ]", "", title.lower())
+    title_transformed = model.transform([title])
+    similarity = cosine_similarity(title_transformed, tf_data).flatten()
+    book_copy["similarities"] = similarity
+    return book_copy
 
 
 
@@ -110,20 +130,38 @@ df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer_reduzido.joblib")
 dados_npz = loading_tfdi()
 
+model_autor = joblib.load(r"models\vectorizer_autores_reduzido.joblib")
+tfd_autor = ss.load_npz("data\data_tfdi_autores_reduzido.npz")
+
 with st.sidebar:
-    st.subheader("Choose three titles of your choice:")
-    input_title = st.text_input(label="Write a title", value="I, Robot")
-    input_title2 = st.text_input(label="Write a second title", value="The hunger games")
-    input_title3 = st.text_input(label="Write a third title", value="Catching fire")
+    st.subheader("Choose three titles:")
+    with st.container(border=True):
+        input_title = st.text_input(label="Write a title", value="Blood Oranges")
+        author1 = st.text_input(label="First author", value="Anne O'Gleadra")
+
+    with st.container(border=True):
+        input_title2 = st.text_input(label="Write a second title", value="Darklight")
+        author2 = st.text_input(label="Second author", value="Chad Kultgen")
+
+    with st.container(border=True):
+        input_title3 = st.text_input(label="Write a third title", value="A Spark of Heavenly Fire")
+        author3 = st.text_input(label="Third author", value="Pat Bertram")
 
     resultado = search_engine(input_title, df_books, dados_npz, model)
     resultado2 = search_engine(input_title2, df_books, dados_npz, model)
     resultado3 = search_engine(input_title3, df_books, dados_npz, model)
 
-    existencia1 = resultado["similarites"].max() > 0.6
-    existencia2 = resultado2["similarites"].max() > 0.6
-    existencia3 = resultado3["similarites"].max() > 0.6
+    # Filtro de autor:
+    resultado = search_engine_authors(author1, resultado, tfd_autor, model_autor)
+    resultado2 = search_engine_authors(author2, resultado2, tfd_autor, model_autor)
+    resultado3 = search_engine_authors(author3, resultado3, tfd_autor, model_autor)
 
+    existencia1 = resultado["similarites_total"].max() > 0.5
+    existencia2 = resultado2["similarites_total"].max() > 0.5
+    existencia3 = resultado3["similarites_total"].max() > 0.5
+
+    st.write("**By Caio Sóter**")
+    st.write("**github**: https://github.com/caiosoter/Book_Advisor")
 
 if (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
     st.write("## About your books:")
@@ -161,9 +199,9 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
 
 elif (input_title and input_title2 and input_title3) and (not existencia1 or not existencia2 or not existencia3):
     st.write("## Sorry, I do not have this book in my Dataset!!")
-    dicionario = {input_title:existencia1, input_title2:existencia2, input_title3:existencia3}
+    dicionario = {input_title:[existencia1, author1], input_title2:[existencia2, author2], input_title3:[existencia3, author3]}
     for chave, value in dicionario.items():
-        if not value:
-            st.write(f"##### - {chave}")
+        if not value[0] and not value[1]:
+            st.write(f"##### - {chave} from the author {value[1]}")
 else:
     st.write("## Feel free to write somes books!!")
