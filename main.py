@@ -84,19 +84,6 @@ def plotar_dados(df):
         st.write(f"**More information**: {url}")
 
 
-"""def search_engine(title, books, tf_data, model):
-    book_copy = books.copy()
-    title = re.sub("[^a-zA-Z0-9 ]", "", title.lower())
-    title_transformed = model.transform([title])
-    similarity = cosine_similarity(title_transformed, tf_data).flatten()
-    index = np.argpartition(similarity, -10)[-10:]
-    book_copy["similarites"] = similarity
-    resuts = book_copy.iloc[index].sort_values("similarites", ascending=False)
-    resuts_filtro = resuts[resuts["Title_cleaned"].str.contains(title)]
-    if not resuts_filtro.empty:
-        return resuts_filtro.head(5)
-    return resuts.head(5)"""
-
 
 def search_engine_authors(author, df_books, tf_data, model):
     book_copy = df_books.copy()
