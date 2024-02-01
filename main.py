@@ -46,6 +46,13 @@ def loading_tfdi():
     dados = ss.load_npz(BytesIO(obj))
     return dados
 
+@st.cache_data(max_entries=1)
+def loading_tfdi_author():
+    s3_client = get_s3_client()
+    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi_autores_reduzido.npz")["Body"].read()
+    dados = ss.load_npz(BytesIO(obj))
+    return dados
+
 
 @st.cache_data(max_entries=1)
 def loading_books():
@@ -128,10 +135,9 @@ st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
 model = load_model_from_s3("databook", "vectorizer_reduzido.joblib")
+model_autor = load_model_from_s3("databook", "vectorizer_autores_reduzido.joblib")
 dados_npz = loading_tfdi()
-
-model_autor = joblib.load(r"models\vectorizer_autores_reduzido.joblib")
-tfd_autor = ss.load_npz("data\data_tfdi_autores_reduzido.npz")
+tfd_autor = loading_tfdi_author()
 
 with st.sidebar:
     st.subheader("Choose three titles:")
