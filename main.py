@@ -190,11 +190,11 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
         with right_2:
             plotar_dados(rec.iloc[[5]])
 
-elif (input_title and input_title2 and input_title3) and (not existencia1 or not existencia2 or not existencia3):
+elif ((input_title and author1) and (input_title2 and author2) and (input_title3 and author3)) and (not existencia1 or not existencia2 or not existencia3):
     st.write("## Sorry, I do not have this book in my Dataset!!")
     dicionario = {input_title:[existencia1, author1], input_title2:[existencia2, author2], input_title3:[existencia3, author3]}
     for chave, value in dicionario.items():
-        if not value[0] and not value[1]:
+        if not value[0] or not value[1]:
             st.write(f"##### - {chave} from the author {value[1]}")
 else:
     st.write("## Feel free to write somes books!!")
