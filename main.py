@@ -39,14 +39,14 @@ def load_model_from_s3(bucket, key):
 
 
     
-@st.cache_data(max_entries=1)
+@st.cache_resource
 def loading_tfdi():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi_reduzido.npz")["Body"].read()
     dados = ss.load_npz(BytesIO(obj))
     return dados
 
-@st.cache_data(max_entries=1)
+@st.cache_resource
 def loading_tfdi_author():
     s3_client = get_s3_client()
     obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi_autores_reduzido.npz")["Body"].read()
@@ -196,5 +196,7 @@ elif ((input_title and author1) and (input_title2 and author2) and (input_title3
     for chave, value in dicionario.items():
         if not value[0] or not value[1]:
             st.write(f"##### - {chave} from the author {value[1]}")
+elif(not author1 or not author2 or not author3):
+    st.write("**Write the name of the author please!**")
 else:
     st.write("## Feel free to write somes books!!")
