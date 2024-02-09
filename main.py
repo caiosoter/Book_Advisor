@@ -140,23 +140,26 @@ with st.sidebar:
         input_title3 = st.text_input(label="Write a third title", value="A Spark of Heavenly Fire")
         author3 = st.text_input(label="Third author", value="Pat Bertram")
 
-    resultado = search_engine(input_title, df_books, dados_npz, model)
-    resultado2 = search_engine(input_title2, df_books, dados_npz, model)
-    resultado3 = search_engine(input_title3, df_books, dados_npz, model)
+    button_response = st.button(label=":blue[Click to run]", use_container_width=True)
+    
+    if button_response:
+        resultado = search_engine(input_title, df_books, dados_npz, model)
+        resultado2 = search_engine(input_title2, df_books, dados_npz, model)
+        resultado3 = search_engine(input_title3, df_books, dados_npz, model)
 
-    # Filtro de autor:
-    resultado = search_engine_authors(author1, resultado, tfd_autor, model_autor)
-    resultado2 = search_engine_authors(author2, resultado2, tfd_autor, model_autor)
-    resultado3 = search_engine_authors(author3, resultado3, tfd_autor, model_autor)
+        # Filtro de autor:
+        resultado = search_engine_authors(author1, resultado, tfd_autor, model_autor)
+        resultado2 = search_engine_authors(author2, resultado2, tfd_autor, model_autor)
+        resultado3 = search_engine_authors(author3, resultado3, tfd_autor, model_autor)
 
-    existencia1 = resultado["similarites_total"].max() > 0.5
-    existencia2 = resultado2["similarites_total"].max() > 0.5
-    existencia3 = resultado3["similarites_total"].max() > 0.5
+        existencia1 = resultado["similarites_total"].max() > 0.5
+        existencia2 = resultado2["similarites_total"].max() > 0.5
+        existencia3 = resultado3["similarites_total"].max() > 0.5
 
     st.write("**By Caio Sóter**")
     st.write("**github**: https://github.com/caiosoter/Book_Advisor")
 
-if (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
+if button_response and (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
     st.write("## About your books:")
     left, middle, right = st.columns(3, gap="large")
     with left:
@@ -190,13 +193,21 @@ if (input_title and input_title2 and input_title3) and (existencia1 and existenc
         with right_2:
             plotar_dados(rec.iloc[[5]])
 
-elif ((input_title and author1) and (input_title2 and author2) and (input_title3 and author3)) and (not existencia1 or not existencia2 or not existencia3):
+elif button_response and ((input_title and author1) and (input_title2 and author2) and (input_title3 and author3)) and (not existencia1 or not existencia2 or not existencia3):
     st.write("## Sorry, I do not have this book in my Dataset!!")
     dicionario = {input_title:[existencia1, author1], input_title2:[existencia2, author2], input_title3:[existencia3, author3]}
     for chave, value in dicionario.items():
         if not value[0] or not value[1]:
             st.write(f"##### - {chave} from the author {value[1]}")
-elif(not author1 or not author2 or not author3):
-    st.write("**Write the name of the author please!**")
-else:
+            
+elif button_response and ((input_title and not author1) or (input_title2 and not author2) or (input_title3 and not author3)):
+    st.write("**Write all the three author's name, please!**")
+    
+elif button_response and ((not input_title and author1) or (not input_title2 and not author2) or (not input_title3 and not author3)):
+    st.write("**Write all the three titles please!**")
+    
+elif button_response:
     st.write("## Feel free to write somes books!!")
+    
+else:
+    st.write("##### Please click on the button if you want the recommendations.")
