@@ -75,10 +75,7 @@ def plotar_dados(df):
         nome = df["Title"].tolist()[0]
         url = df["url"].tolist()[0]
         imagem = df["image"].tolist()[0]
-        if imagem:
-            st.image(imagem)
-        else:
-            st.image(st.secrets["link_sem_imagem"])
+        st.image(imagem)
         st.write(f"**Name**: {nome}")
         st.write(f"**Author:** {author}")
         st.write(f"**More information**: {url}")
@@ -141,7 +138,6 @@ with st.sidebar:
         author3 = st.text_input(label="Third author", value="Pat Bertram")
 
     button_response = st.button(label=":blue[Click to run]", use_container_width=True)
-    
     if button_response:
         resultado = search_engine(input_title, df_books, dados_npz, model)
         resultado2 = search_engine(input_title2, df_books, dados_npz, model)
@@ -156,9 +152,12 @@ with st.sidebar:
         existencia2 = resultado2["similarites_total"].max() > 0.5
         existencia3 = resultado3["similarites_total"].max() > 0.5
 
+    
     st.write("**By Caio Sóter**")
-    st.write("**github**: https://github.com/caiosoter/Book_Advisor")
-
+    st.markdown("[![GitHub](https://badgen.net/badge/icon/GitHub?icon=github&label)](https://github.com/caiosoter/Book_Advisor)")
+    st.markdown("[![](https://databook.s3.us-east-2.amazonaws.com/icons8-linkedin-48.png)](https://www.linkedin.com/in/caio-soter/)")
+    
+    
 if button_response and (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
     st.write("## About your books:")
     left, middle, right = st.columns(3, gap="large")
@@ -211,3 +210,6 @@ elif button_response:
     
 else:
     st.write("##### Please click on the button if you want the recommendations.")
+    
+
+
