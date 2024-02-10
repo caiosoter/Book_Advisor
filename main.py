@@ -5,7 +5,6 @@ import joblib
 from io import BytesIO
 import tempfile
 import scipy.sparse as ss
-import numpy as np
 import os
 import boto3
 import logging
@@ -36,7 +35,6 @@ def load_model_from_s3(bucket, key):
         # Ensure the temporary file is deleted
         if 'temp_file' in locals():
             os.unlink(temp_file.name)
-
 
     
 @st.cache_resource
@@ -81,7 +79,6 @@ def plotar_dados(df):
         st.write(f"**More information**: {url}")
 
 
-
 def search_engine_authors(author, df_books, tf_data, model):
     book_copy = df_books.copy()
     author = re.sub("[^a-zA-Z0-9 ]", "", author.lower())
@@ -99,7 +96,6 @@ def search_engine(title, books, tf_data, model):
     similarity = cosine_similarity(title_transformed, tf_data).flatten()
     book_copy["similarities"] = similarity
     return book_copy
-
 
 
 def recomendacao(df_interactions, escolha, df_books):
@@ -127,46 +123,45 @@ with st.sidebar:
     st.subheader("Choose three titles:")
     with st.container(border=True):
         input_title = st.text_input(label="Write a title", value="Blood Oranges")
-        author1 = st.text_input(label="First author", value="Anne O'Gleadra")
+        resultado_total1 = search_engine(input_title, df_books, dados_npz, model)
+        resultado = resultado_total1[resultado_total1["similarities"] > 0.65].sort_values("similarities", ascending=False)
+        author1 = st.selectbox(label="First author", options=resultado["author"].unique(), index=None)        
 
     with st.container(border=True):
         input_title2 = st.text_input(label="Write a second title", value="Darklight")
-        author2 = st.text_input(label="Second author", value="Chad Kultgen")
+        resultado_total2 = search_engine(input_title2, df_books, dados_npz, model)
+        resultado2 = resultado_total2[resultado_total2["similarities"] > 0.65].sort_values("similarities", ascending=False)
+        author2 = st.selectbox(label="Second author", options=resultado2["author"].unique(), index=None)
 
     with st.container(border=True):
         input_title3 = st.text_input(label="Write a third title", value="A Spark of Heavenly Fire")
-        author3 = st.text_input(label="Third author", value="Pat Bertram")
+        resultado_total3 = search_engine(input_title3, df_books, dados_npz, model)
+        resultado3 = resultado_total3[resultado_total3["similarities"] > 0.65].sort_values("similarities", ascending=False)
+        author3 = st.selectbox(label="Third author", options=resultado3["author"].unique(), index=None)
 
     button_response = st.button(label=":blue[Click to run]", use_container_width=True)
-    if button_response:
-        resultado = search_engine(input_title, df_books, dados_npz, model)
-        resultado2 = search_engine(input_title2, df_books, dados_npz, model)
-        resultado3 = search_engine(input_title3, df_books, dados_npz, model)
-
-        # Filtro de autor:
-        resultado = search_engine_authors(author1, resultado, tfd_autor, model_autor)
-        resultado2 = search_engine_authors(author2, resultado2, tfd_autor, model_autor)
-        resultado3 = search_engine_authors(author3, resultado3, tfd_autor, model_autor)
-
-        existencia1 = resultado["similarites_total"].max() > 0.5
-        existencia2 = resultado2["similarites_total"].max() > 0.5
-        existencia3 = resultado3["similarites_total"].max() > 0.5
-
-    
+    if button_response and (author1 and author2 and author3):
+        resultado_total1 = search_engine_authors(author1, resultado_total1, tfd_autor, model_autor)
+        resultado_total2 = search_engine_authors(author2, resultado_total2, tfd_autor, model_autor)
+        resultado_total3 = search_engine_authors(author3, resultado_total3, tfd_autor, model_autor)
+        
+        existencia1 = resultado_total1[resultado_total1["book_id"].isin(resultado["book_id"])]["similarites_total"].max() >= 0.75
+        existencia2 = resultado_total2[resultado_total2["book_id"].isin(resultado2["book_id"])]["similarites_total"].max() >= 0.75
+        existencia3 = resultado_total3[resultado_total3["book_id"].isin(resultado3["book_id"])]["similarites_total"].max() >= 0.75
+        
     st.write("**By Caio Sóter**")
     st.markdown("[![GitHub](https://badgen.net/badge/icon/GitHub?icon=github&label)](https://github.com/caiosoter/Book_Advisor)")
-    st.markdown("[![](https://databook.s3.us-east-2.amazonaws.com/icons8-linkedin-48.png)](https://www.linkedin.com/in/caio-soter/)")
+    st.markdown("[![](https://databook.s3.us-east-2.amazonaws.com/icons8-linkedin-48.png)](https://www.linkedin.com/in/caio-soter/)") 
     
-    
-if button_response and (input_title and input_title2 and input_title3) and (existencia1 and existencia2 and existencia3):
+if button_response and (input_title and input_title2 and input_title3) and (author1 and author2 and author3) and (existencia1 and existencia2 and existencia3):
     st.write("## About your books:")
     left, middle, right = st.columns(3, gap="large")
     with left:
-        plotar_dados(resultado.iloc[[0]])
+        plotar_dados(resultado_total1.iloc[[0]])
     with middle:
-        plotar_dados(resultado2.iloc[[0]])
+        plotar_dados(resultado_total2.iloc[[0]])
     with right:
-        plotar_dados(resultado3.iloc[[0]])
+        plotar_dados(resultado_total3.iloc[[0]])
 
     id_escolhido1 = resultado.iloc[[0]]["book_id"].values[0]
     id_escolhido2 = resultado2.iloc[[0]]["book_id"].values[0]
@@ -197,19 +192,14 @@ elif button_response and ((input_title and author1) and (input_title2 and author
     dicionario = {input_title:[existencia1, author1], input_title2:[existencia2, author2], input_title3:[existencia3, author3]}
     for chave, value in dicionario.items():
         if not value[0] or not value[1]:
+            st.write()
             st.write(f"##### - {chave} from the author {value[1]}")
-            
-elif button_response and ((input_title and not author1) or (input_title2 and not author2) or (input_title3 and not author3)):
-    st.write("**Write all the three author's name, please!**")
-    
-elif button_response and ((not input_title and author1) or (not input_title2 and not author2) or (not input_title3 and not author3)):
-    st.write("**Write all the three titles please!**")
-    
-elif button_response:
+
+elif button_response and ((not input_title and not author1) or (not input_title2 and not author2) or (not input_title3 and not author3)):
     st.write("## Feel free to write somes books!!")
-    
+           
+elif button_response and (not author1 or not author2 or not author3):
+    st.write("**Write all the three author's name, please!**")
+       
 else:
     st.write("##### Please click on the button if you want the recommendations.")
-    
-
-
