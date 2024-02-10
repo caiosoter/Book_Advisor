@@ -162,10 +162,11 @@ if button_response and (input_title and input_title2 and input_title3) and (auth
         plotar_dados(resultado_total2.iloc[[0]])
     with right:
         plotar_dados(resultado_total3.iloc[[0]])
-
-    id_escolhido1 = resultado.iloc[[0]]["book_id"].values[0]
-    id_escolhido2 = resultado2.iloc[[0]]["book_id"].values[0]
-    id_escolhido3 = resultado3.iloc[[0]]["book_id"].values[0]
+    
+    
+    id_escolhido1 = resultado_total1.iloc[[0]]["book_id"].values[0]
+    id_escolhido2 = resultado_total2.iloc[[0]]["book_id"].values[0]
+    id_escolhido3 = resultado_total3.iloc[[0]]["book_id"].values[0]
 
     df_interactions = loading_interactions()
     rec = recomendacao(df_interactions, [id_escolhido1, id_escolhido2, id_escolhido3], df_books)
