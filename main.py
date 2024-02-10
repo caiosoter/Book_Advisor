@@ -11,7 +11,6 @@ import logging
 from sklearn.metrics.pairwise import cosine_similarity
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
 
-
 @st.cache_resource
 def get_s3_client():
    s3 = boto3.client('s3', 
@@ -21,11 +20,11 @@ def get_s3_client():
 
 
 @st.cache_resource
-def load_model_from_s3(bucket, key):
-    s3_client = get_s3_client()
+def load_model_from_s3(bucket, key, client):
+    
     try:
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            s3_client.download_fileobj(Fileobj=temp_file, Bucket=bucket, Key=key)
+            client.download_fileobj(Fileobj=temp_file, Bucket = bucket, Key=key)
             temp_file.seek(0)
             model = joblib.load(temp_file)
         return model
@@ -38,32 +37,28 @@ def load_model_from_s3(bucket, key):
 
     
 @st.cache_resource
-def loading_tfdi():
-    s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi_reduzido.npz")["Body"].read()
+def loading_tfdi(client, bucket):
+    obj = client.get_object(Bucket = bucket, Key="data_tfdi_reduzido.npz")["Body"].read()
     dados = ss.load_npz(BytesIO(obj))
     return dados
 
 @st.cache_resource
-def loading_tfdi_author():
-    s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="data_tfdi_autores_reduzido.npz")["Body"].read()
+def loading_tfdi_author(client, bucket):
+    obj = client.get_object(Bucket = bucket, Key="data_tfdi_autores_reduzido.npz")["Body"].read()
     dados = ss.load_npz(BytesIO(obj))
     return dados
 
 
 @st.cache_data(max_entries=1)
-def loading_books():
-    s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key="goodreads_books_reduzido.feather")["Body"].read()
+def loading_books(client, bucket):
+    obj = client.get_object(Bucket = bucket, Key="goodreads_books_reduzido.feather")["Body"].read()
     dados = pd.read_feather(BytesIO(obj))
     return dados
 
 
 @st.cache_data(max_entries=1)
-def loading_interactions():
-    s3_client = get_s3_client()
-    obj = s3_client.get_object(Bucket=st.secrets["bucket_name"], Key=f"interactions/goodreads_interactions_reduzido.parquet")["Body"].read()
+def loading_interactions(client, bucket):
+    obj = client.get_object(Bucket = bucket, Key=f"interactions/goodreads_interactions_reduzido.parquet")["Body"].read()
     dados = pd.read_parquet(BytesIO(obj))
     return dados
 
@@ -110,7 +105,8 @@ def recomendacao(df_interactions, escolha, df_books):
     resultado = resultado.sort_values(["score" , "count"], ascending=[False, False]).head(6)
     return resultado
 
-
+client = get_s3_client()
+Bucket = st.secrets["bucket_name"]
 st.markdown("# Book Advisor :book:")
 st.subheader('I would like to suggest you a new book!!')
 df_books = loading_books()
