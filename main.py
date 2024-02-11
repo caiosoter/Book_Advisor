@@ -10,7 +10,7 @@ import boto3
 import logging
 from sklearn.metrics.pairwise import cosine_similarity
 st.set_page_config(page_title="Book Advisor", page_icon=":book")
-
+st.markdown("<link rel='stylesheet' href='styles.css'>", unsafe_allow_html=True)
 
 @st.cache_resource
 def get_s3_client():
