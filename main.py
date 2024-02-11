@@ -149,9 +149,14 @@ with st.sidebar:
         existencia2 = resultado_total2[resultado_total2["book_id"].isin(resultado2["book_id"])]["similarites_total"].max() >= 0.75
         existencia3 = resultado_total3[resultado_total3["book_id"].isin(resultado3["book_id"])]["similarites_total"].max() >= 0.75
         
-    st.write("**By Caio Sóter**")
-    st.markdown("[![GitHub](https://badgen.net/badge/icon/GitHub?icon=github&label)](https://github.com/caiosoter/Book_Advisor)")
-    st.markdown("[![](https://databook.s3.us-east-2.amazonaws.com/icons8-linkedin-48.png)](https://www.linkedin.com/in/caio-soter/)") 
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write("**By Caio Sóter**")
+    with col2:
+        st.markdown("[![GitHub](https://badgen.net/badge/icon/GitHub?icon=github&label)](https://github.com/caiosoter/Book_Advisor)")
+    with col3:
+        st.markdown("[![](https://databook.s3.us-east-2.amazonaws.com/icons8-linkedin-48.png)](https://www.linkedin.com/in/caio-soter/)") 
+
     
 if button_response and (input_title and input_title2 and input_title3) and (author1 and author2 and author3) and (existencia1 and existencia2 and existencia3):
     st.write("## About your books:")
