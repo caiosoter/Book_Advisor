@@ -50,11 +50,11 @@ background-image: linear-gradient(45deg, black, #212021);
 }}
 
 
-div.st-emotion-cache-r421ms.e1f1d6gn0{{
+div.st-emotion-cache-1xw8zd0.e1f1d6gn0{{
     background-color: #212021;
     opacity:0.9;
 }}
-div.st-emotion-cache-1xw8zd0.e1f1d6gn0{{
+div.st-emotion-cache-1fjr796.e1f1d6gn3{{
     background-color: #212021;
     opacity:0.9;
     padding: 0.5rem 1.5rem;
