@@ -13,15 +13,12 @@ st.set_page_config(page_title="Book Advisor", page_icon=":book")
 
 page_bg_img = f"""
 <style>
-
-
 .stApp {{
-        background: url({st.secrets["link_imagem_back"]});
-        background-size: cover
-        background-size:100% 100%;
-        background-repeat: no-repeat;
-        z-index: 0;
-}}
+             background: url({st.secrets["link_imagem_back"]});
+             background-size:110% 100%;
+             background-repeat: no-repeat;
+             z-index: 0;
+         }}
 
 
 [data-testid="stHeader"] {{
