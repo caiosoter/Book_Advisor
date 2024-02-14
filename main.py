@@ -65,7 +65,7 @@ div.st-emotion-cache-1fjr796.e1f1d6gn3{{
 }}
 
 .st-emotion-cache-16txtl3.eczjsme4{{
-    padding: 0;
+    padding: 0rem 1.5rem;
 }}
 </style>
 """
