@@ -58,6 +58,14 @@ div.st-emotion-cache-1fjr796.e1f1d6gn3{{
     background-color: #212021;
     opacity:0.9;
     padding: 0.5rem 1.5rem;
+    border-style: solid;
+    border-radius: 10px;
+    border-width: 2px;
+    border-color: darkgray;
+}}
+
+.st-emotion-cache-16txtl3 {{
+    padding: 0;
 }}
 </style>
 """
