@@ -11,7 +11,7 @@ I am a huge fan of books, so I have been thinking how I usually choose a new boo
 
  </a> 
 
- <a href="https://www.youtube.com/watch?v=x-alwfgQ-cY&list=PLUnu2sOhsKcHpUmiTJGc_tr5_q4kjBQzg&index=1&t=499s">
+ <a href="https://www.youtube.com/watch?v=x-alwfgQ-cY&list=PLUnu2sOhsKcHpUmiTJGc_tr5_q4kjBQzg&index=2&t=499s">
 
    ![youtube](https://img.shields.io/badge/youtube-Book_Recommendations_With_Collaborative_Filtering_and_Python_[part_2_of_2]-red?style=for-the-badge&logo=youtube&logoColor=white&labelColor=gray&color=red)
 
