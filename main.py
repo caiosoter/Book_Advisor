@@ -20,7 +20,6 @@ page_bg_img = f"""
              z-index: 0;
          }}
 
-
 [data-testid="stHeader"] {{
 background-image: linear-gradient(45deg, black, #212021);
 }}
@@ -33,10 +32,9 @@ background-image: linear-gradient(45deg, black, #212021);
 background-image: linear-gradient(45deg, black, #212021);
 }}
 
-[data-testid="stSidebarContent"]{{
-    padding: 0rem 0.5rem;
+[data-testid="stSideBarUserContent"]{{
+    padding: 0rem 1.5rem;
 }}
-
 
 .st-emotion-cache-124fx4h {{
   width: 90%;
@@ -62,10 +60,6 @@ div.st-emotion-cache-1fjr796.e1f1d6gn3{{
     border-radius: 10px;
     border-width: 2px;
     border-color: darkgray;
-}}
-
-[data-testid="stSideBarUserContent"]{{
-    padding: 0rem 1.5rem;
 }}
 </style>
 """
