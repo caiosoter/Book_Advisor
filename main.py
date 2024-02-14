@@ -64,10 +64,6 @@ div.st-emotion-cache-1fjr796.e1f1d6gn3{{
 </style>
 """
 
-
-
-#st-emotion-cache-1fjr796.e1f1d6gn3
-
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
 
@@ -189,19 +185,19 @@ with st.sidebar:
     with st.container(border=True):
         input_title = st.text_input(label="Write a title", value="Blood Oranges")
         resultado_total1 = search_engine(input_title, df_books, dados_npz, model)
-        resultado = resultado_total1[resultado_total1["similarities"] > 0.65].sort_values("similarities", ascending=False)
-        author1 = st.selectbox(label="First author", options=resultado["author"].unique(), index=None)        
+        resultado = resultado_total1[resultado_total1["similarities"] >= 0.75].sort_values("similarities", ascending=False)
+        author1 = st.selectbox(label="First author", options=resultado["author"].unique(), index=None)  
 
     with st.container(border=True):
         input_title2 = st.text_input(label="Write a second title", value="Darklight")
         resultado_total2 = search_engine(input_title2, df_books, dados_npz, model)
-        resultado2 = resultado_total2[resultado_total2["similarities"] > 0.65].sort_values("similarities", ascending=False)
-        author2 = st.selectbox(label="Second author", options=resultado2["author"].unique(), index=None)
+        resultado2 = resultado_total2[resultado_total2["similarities"] >= 0.75].sort_values("similarities", ascending=False)
+        author2 = st.selectbox(label="Second author", options=resultado2["author"].unique(), index=None, )
 
     with st.container(border=True):
         input_title3 = st.text_input(label="Write a third title", value="A Spark of Heavenly Fire")
         resultado_total3 = search_engine(input_title3, df_books, dados_npz, model)
-        resultado3 = resultado_total3[resultado_total3["similarities"] > 0.65].sort_values("similarities", ascending=False)
+        resultado3 = resultado_total3[resultado_total3["similarities"] >= 0.75].sort_values("similarities", ascending=False)
         author3 = st.selectbox(label="Third author", options=resultado3["author"].unique(), index=None)
 
     button_response = st.button(label=":blue[Click to run]", use_container_width=True)
@@ -209,6 +205,7 @@ with st.sidebar:
         resultado_total1 = search_engine_authors(author1, resultado_total1, tfd_autor, model_autor)
         resultado_total2 = search_engine_authors(author2, resultado_total2, tfd_autor, model_autor)
         resultado_total3 = search_engine_authors(author3, resultado_total3, tfd_autor, model_autor)
+        
         
         existencia1 = resultado_total1[resultado_total1["book_id"].isin(resultado["book_id"])]["similarites_total"].max() >= 0.75
         existencia2 = resultado_total2[resultado_total2["book_id"].isin(resultado2["book_id"])]["similarites_total"].max() >= 0.75
